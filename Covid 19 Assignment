@@ -1,0 +1,93 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Task 1: Load and display the first 5 rows
+data = pd.read_csv('covid_19_country_wise_latest.csv')
+print(data.head())
+
+# Task 2: Set the index to 'Unnamed: 0'
+data.set_index('Unnamed: 0', inplace=True)
+
+# Task 3: Rename the index column to 'index'
+data.index.name = 'index'
+
+# Task 4: Replace whitespace in column names with underscores
+data.columns = data.columns.str.replace(' ', '_')
+
+# Task 5: Check basic info and missing values
+print(data.info())
+print(data.isnull().sum())
+
+# Task 6: Fill NaN values with the mean of the column
+data.fillna(data.mean(), inplace=True)
+
+# Task 7: Count unique countries
+unique_countries = data['Country/Region'].nunique()
+print(f"Unique countries: {unique_countries}")
+
+# Task 8: Remove duplicate country entries
+data.drop_duplicates(subset='Country/Region', inplace=True)
+
+# Task 9: Mean, median, and standard deviation of total cases
+mean_cases = data['Confirmed'].mean()
+median_cases = data['Confirmed'].median()
+std_cases = data['Confirmed'].std()
+print(f"Mean: {mean_cases}, Median: {median_cases}, Std Dev: {std_cases}")
+
+# Task 10: Replace non-numeric values in 'Deaths' with the mean
+data['Deaths'] = pd.to_numeric(data['Deaths'], errors='coerce')
+data['Deaths'].fillna(data['Deaths'].mean(), inplace=True)
+
+# Task 11: Change 'Deaths' column to integer type
+data['Deaths'] = data['Deaths'].astype(int)
+
+# Task 12: Total deaths and recoveries worldwide
+total_deaths = data['Deaths'].sum()
+total_recovered = data['Recovered'].sum()
+print(f"Total deaths: {total_deaths}, Total recovered: {total_recovered}")
+
+# Task 13: Countries with more than 1 million cases
+countries_over_1m = data[data['Confirmed'] > 1000000]['Country/Region'].count()
+print(f"Countries with >1M cases: {countries_over_1m}")
+
+# Task 14: Countries with recovery rate above 95%
+data['Recovery_Rate'] = (data['Recovered'] / data['Confirmed']) * 100
+high_recovery_countries = data[data['Recovery_Rate'] > 95]['Country/Region']
+print("Countries with recovery rate >95%:")
+print(high_recovery_countries)
+
+# Task 15: Drop 'WHO Region' and 'Confirmed' columns
+data.drop(columns=['WHO_Region', 'Confirmed'], inplace=True)
+
+# Task 16: Country with the most deaths
+max_deaths_country = data.loc[data['Deaths'].idxmax(), 'Country/Region']
+print(f"Country with most deaths: {max_deaths_country}")
+
+# Task 17: Sort by deaths (descending)
+data_sorted_by_deaths = data.sort_values(by='Deaths', ascending=False)
+print(data_sorted_by_deaths[['Country/Region', 'Deaths']])
+
+# Task 18: Add 'Total_cases' column (Deaths + Recovered + Active)
+data['Total_cases'] = data['Deaths'] + data['Recovered'] + data['Active']
+
+# Task 19: Calculate 'Death_Rate' (Deaths / Total_cases * 100)
+data['Death_Rate'] = (data['Deaths'] / data['Total_cases']) * 100
+
+# Task 20: Countries with increasing cases but low death rates
+data['Case_Increase'] = data['New_cases'] > 0
+low_death_rate_countries = data[(data['Case_Increase']) & (data['Death_Rate'] < 5)]
+print("Countries with increasing cases but low death rates:")
+print(low_death_rate_countries[['Country/Region', 'Death_Rate']])
+
+# Task 21: Print head of 'Country/Region' and 'Death_Rate'
+print(data[['Country/Region', 'Death_Rate']].head())
+
+# Task 22: Scatter plot of total cases vs total deaths
+plt.scatter(data['Total_cases'], data['Deaths'])
+plt.xlabel('Total Cases')
+plt.ylabel('Total Deaths')
+plt.title('Total Cases vs Total Deaths')
+plt.show()
+
+# Task 23: Save the updated dataset to a new CSV file
+data.to_csv('updated_covid_data.csv', index=False)
